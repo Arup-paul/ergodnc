@@ -142,5 +142,41 @@ class OfficeControllerTest extends TestCase
    }
 
 
+    /**
+     * @test
+     */
+    public function isOrderByDistanceWhenCoordinatesAreProvider()
+   {
+       //22.334155292421983 , 91.7888275985061
+
+
+       $office1 = Office::factory()->create([
+           'lat' => '22.339553840957688',
+           'lng' => '91.78123158250924',
+           'title' => 'I Block'
+       ]);
+
+       $office2 = Office::factory()->create([
+           'lat' => '22.330185638112855',
+           'lng' => '91.79063004297996',
+           'title' => 'Chevron'
+       ]);
+
+       $response = $this->get('/api/offices?lat=22.334155292421983&lng=91.7888275985061');
+
+
+       $response->assertOk();
+       $this->assertEquals('Chevron',$response->json('data')[0]['title']);
+       $this->assertEquals('I Block',$response->json('data')[1]['title']);
+
+       $response = $this->get('/api/offices');
+
+
+       $response->assertOk();
+       $this->assertEquals('I Block',$response->json('data')[0]['title']);
+       $this->assertEquals('Chevron',$response->json('data')[1]['title']);
+
+
+   }
 
 }
