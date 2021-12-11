@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Office;
+use App\Models\Reservation;
 use App\Models\User;
 use Cassandra\Exception\TruncateException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,6 +68,30 @@ class OfficeControllerTest extends TestCase
         $this->assertEquals($office->id, $response->json('data')[0]['id']);
 
     }
+
+    /**
+     * @test
+     */
+    public function isFilterByUserId(){
+        Office::factory(3)->create();
+
+        $user = User::factory()->create();
+
+        $office = Office::factory()->create();
+
+        Reservation::factory()->for(Office::factory())->create();
+        Reservation::factory()->for($office)->for($user)->create();
+
+        $response = $this->get(
+            '/api/offices?user_id='.$user->id
+        );
+
+        $response->assertOk();
+        $response->assertJsonCount(1,'data');
+        $this->assertEquals($office->id, $response->json('data')[0]['id']);
+
+    }
+
 
 
 }
