@@ -22,11 +22,11 @@ class OfficeControllerTest extends TestCase
      */
     public function itListsAllOfficesPaginatedWay()
     {
-        Office::factory(3)->create();
+        Office::factory(30)->create();
         $response = $this->get('/api/offices');
 
         $response->assertOk();
-        $response->assertJsonCount(3,'data');
+        $response->assertJsonCount(20,'data');
         $this->assertNotNull($response->json('data')[0]['id']);
         $this->assertNotNull($response->json('meta'));
         $this->assertNotNull($response->json('links'));
@@ -110,6 +110,10 @@ class OfficeControllerTest extends TestCase
        $office->images()->create(['path' => 'image.jpg']);
 
        $response = $this->get('/api/offices');
+
+       dd(
+           $response->json()
+       );
 
        $response->assertOk();
 
