@@ -13,8 +13,10 @@ class OfficeController extends Controller
    public function index(): AnonymousResourceCollection
    {
        $offices = Office::query()
-                          ->latest('id')
-                          ->get();
+                      ->where('approval_status',Office::APPROVAL_APPROVED)
+                      ->where('hidden',false)
+                      ->latest('id')
+                      ->paginate(20);
       return OfficeResource::collection(
         $offices
       );
