@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Reservation;
+use App\Models\Validator\OfficeValidator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -51,31 +52,23 @@ class OfficeController extends Controller
       if(!auth()->user()->tokenCan('office.create')){
          abort(Response::HTTP_FORBIDDEN);
       }
-     $attributes =  validator(request()->all(),
-     [
-         'title' => ['string','required'],
-         'description' => ['string','required'],
-         'lat' => ['numeric','required'],
-         'lng' => ['numeric','required'],
-         'address_line1' => ['string','required'],
-         'hidden' => ['bool'],
-         'price_per_day' => ['required','integer','min:100'],
-         'monthly_discount' => ['integer','min:0','max:90'],
+       $attributes = (new OfficeValidator())->validate(
+           $office = new Office(),
+           request()->all());
 
+       $attributes['approval_status'] = Office::APPROVAL_PENDING;
+       $attributes['user_id'] = auth()->id();
 
-         'tags' => ['array'],
-         'tags.*' => ['integer',Rule::exists('tags','id')]
-     ]
-     )->validate();
-
-     $attributes['approval_status'] = Office::APPROVAL_PENDING;
-
-     $office = DB::transaction(function () use ($attributes){
-         $office = auth()->user()->offices()->create(
+     $office = DB::transaction(function () use ($office, $attributes){
+         $office->fill(
              Arr::except($attributes,['tags'])
-         );
+         )->save();
 
-         $office->tags()->attach($attributes['tags']);
+         if(isset($attributes['tags'])) {
+             $office->tags()->attach($attributes['tags']);
+         }
+
+
 
          return$office;
      });
@@ -83,6 +76,31 @@ class OfficeController extends Controller
      return OfficeResource::make(
          $office->load(['images','tags','user'])
      );
+
+   }
+
+
+   public function update(Office $office): JsonResource
+   {
+       abort_unless(auth()->user()->tokenCan('office.update'),
+           Response::HTTP_FORBIDDEN
+       );
+       $attributes = (new OfficeValidator())->validate($office, request()->all());
+
+       DB::transaction(function () use ($office,$attributes){
+            $office->update(
+               Arr::except($attributes,['tags'])
+           );
+
+            if(isset($attributes['tags'])){
+                $office->tags()->sync($attributes['tags']);
+            }
+
+       });
+
+       return OfficeResource::make(
+           $office->load(['images','tags','user'])
+       );
 
    }
 

@@ -218,36 +218,25 @@ class OfficeControllerTest extends TestCase
    {
        $user =User::factory()->createQuietly();
 
-       $tag = Tag::factory()->create();
-       $tag2 = Tag::factory()->create();
+
+       $tags = Tag::factory(2)->create();
 
        $this->actingAs($user);
 
-       $response = $this->postJson('/api/offices',[
-            'title' => 'Office in Chattogram',
-            'description' => 'Description',
-           'lat' => '22.339553840957688',
-           'lng' => '91.78123158250924',
-           'address_line1' => 'address',
-           'price_per_day' =>  10000,
-           'monthly_discount' => 5,
-           'tags' => [
-               $tag->id,$tag2->id
-           ]
+       $response = $this->postJson('/api/offices', Office::factory()->raw([
+             'tags' => $tags->pluck('id')->toArray()
+       ]));
+
+       $response->assertCreated()
+           ->assertJsonPath('data.approval_status', Office::APPROVAL_PENDING)
+           ->assertJsonPath('data.user.id', $user->id)
+           ->assertJsonCount(2, 'data.tags');
+
+       $this->assertDatabaseHas('offices', [
+           'id' => $response->json('data.id')
        ]);
 
 
-
-
-        $response->assertCreated()
-                 ->assertJsonPath('data.title','Office in Chattogram')
-                 ->assertJsonPath('data.approval_status',Office::APPROVAL_PENDING)
-                 ->assertJsonPath('data.user.id', $user->id)
-                 ->assertJsonCount(2,'data.tags');
-
-        $this->assertDatabaseHas('offices',[
-           'title' => 'Office in Chattogram'
-        ]);
    }
 
     /**
@@ -265,6 +254,35 @@ class OfficeControllerTest extends TestCase
         ]);
 
      $response->assertStatus(403);
+
+    }
+
+
+
+    /**
+     * @test
+     */
+    public function itUpdatesAnOffice()
+    {
+        $user =User::factory()->createQuietly();
+
+        $tags = Tag::factory(2)->create();
+        $office  =   Office::factory()->for($user)->create();
+
+       $office->tags()->attach($tags);
+
+
+        $this->actingAs($user);
+
+        $response = $this->putJson('/api/offices/'.$office->id,  [
+               'title' => "Amazing Office"
+         ]);
+
+
+
+        $response->assertOk()
+            ->assertJsonPath('data.title','Amazing Office');
+
 
     }
 
