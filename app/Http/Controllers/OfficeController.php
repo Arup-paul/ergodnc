@@ -9,7 +9,9 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 
@@ -47,7 +49,7 @@ class OfficeController extends Controller
    public function create():JsonResource
    {
       if(!auth()->user()->tokenCan('office.create')){
-         abort(403);
+         abort(Response::HTTP_FORBIDDEN);
       }
      $attributes =  validator(request()->all(),
      [
@@ -68,14 +70,19 @@ class OfficeController extends Controller
 
      $attributes['approval_status'] = Office::APPROVAL_PENDING;
 
-     $office = auth()->user()->offices()->create(
-         Arr::except($attributes,['tags'])
+     $office = DB::transaction(function () use ($attributes){
+         $office = auth()->user()->offices()->create(
+             Arr::except($attributes,['tags'])
+         );
+
+         $office->tags()->attach($attributes['tags']);
+
+         return$office;
+     });
+
+     return OfficeResource::make(
+         $office->load(['images','tags','user'])
      );
-
-     $office->tags()->sync($attributes['tags']);
-
-
-     return OfficeResource::make($office);
 
    }
 
