@@ -250,4 +250,22 @@ class OfficeControllerTest extends TestCase
         ]);
    }
 
+    /**
+     * @test
+     */
+    public function itDoesntAllowCreatingIfScopeNotProvided()
+    {
+        $user = User::factory()->createQuietly();
+
+        $token = $user->createToken('test',[]);
+
+
+        $response = $this->postJson('/api/offices',[],[
+            'Authorization' => 'Bearer '.$token->plainTextToken
+        ]);
+
+     $response->assertStatus(403);
+
+    }
+
 }
