@@ -111,9 +111,7 @@ class OfficeControllerTest extends TestCase
 
        $response = $this->get('/api/offices');
 
-       dd(
-           $response->json()
-       );
+
 
        $response->assertOk();
 
@@ -210,8 +208,46 @@ class OfficeControllerTest extends TestCase
        $this->assertCount(1,$response->json('data')['images']);
        $this->assertEquals($user->id,$response->json('data')['user']['id']);
 
+   }
 
 
+    /**
+     * @test
+     */
+    public function itCreatesAnOffice()
+   {
+       $user =User::factory()->createQuietly();
+
+       $tag = Tag::factory()->create();
+       $tag2 = Tag::factory()->create();
+
+       $this->actingAs($user);
+
+       $response = $this->postJson('/api/offices',[
+            'title' => 'Office in Chattogram',
+            'description' => 'Description',
+           'lat' => '22.339553840957688',
+           'lng' => '91.78123158250924',
+           'address_line1' => 'address',
+           'price_per_day' =>  10000,
+           'monthly_discount' => 5,
+           'tags' => [
+               $tag->id,$tag2->id
+           ]
+       ]);
+
+
+
+
+        $response->assertCreated()
+                 ->assertJsonPath('data.title','Office in Chattogram')
+                 ->assertJsonPath('data.approval_status',Office::APPROVAL_PENDING)
+                 ->assertJsonPath('data.user.id', $user->id)
+                 ->assertJsonCount(2,'data.tags');
+
+        $this->assertDatabaseHas('offices',[
+           'title' => 'Office in Chattogram'
+        ]);
    }
 
 }

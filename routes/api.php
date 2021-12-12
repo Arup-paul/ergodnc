@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/tags',  \App\Http\Controllers\TagController::class);
 
 
-//Office
+//Offices
 Route::get('/offices',  [OfficeController::class,'index']);
 Route::get('/office/{office}',  [OfficeController::class,'show']);
+Route::post('/offices',  [OfficeController::class,'create'])->middleware(['auth:sanctum','verified']);
