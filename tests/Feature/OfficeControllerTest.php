@@ -7,10 +7,12 @@ use App\Models\Office;
 use App\Models\Reservation;
 use App\Models\Tag;
 use App\Models\User;
+use App\Notifications\OfficePendingApprovalNotification;
 use Cassandra\Exception\TruncateException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Notification;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -219,7 +221,9 @@ class OfficeControllerTest extends TestCase
     public function itCreatesAnOffice()
    {
        $user =User::factory()->createQuietly();
+       $admin = User::factory()->create(['name' => 'Arup']);
 
+       Notification::fake();
 
        $tags = Tag::factory(2)->create();
 
@@ -237,6 +241,9 @@ class OfficeControllerTest extends TestCase
        $this->assertDatabaseHas('offices', [
            'id' => $response->json('data.id')
        ]);
+       Notification::assertSentTo($admin,OfficePendingApprovalNotification::class);
+
+
 
 
    }
@@ -332,8 +339,14 @@ class OfficeControllerTest extends TestCase
      */
     public function itMarksTheOfficeAsPendingIfDirty()
     {
+        $admin = User::factory()->create(['name' => 'Arup']);
+
+        Notification::fake();
+
         $user = User::factory()->create();
         $office  =   Office::factory()->for($user)->create();
+
+
 
         $this->actingAs($user);
 
@@ -347,6 +360,9 @@ class OfficeControllerTest extends TestCase
             'id' => $office->id,
             'approval_status' => Office::APPROVAL_PENDING
         ]);
+
+        Notification::assertSentTo($admin,OfficePendingApprovalNotification::class);
+
 
 
     }

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Resources\OfficeResource;
 use App\Models\Office;
 use App\Models\Reservation;
+use App\Models\User;
 use App\Models\Validator\OfficeValidator;
+use App\Notifications\OfficePendingApprovalNotification;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -13,6 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
 
 
@@ -73,7 +76,10 @@ class OfficeController extends Controller
          return$office;
      });
 
-     return OfficeResource::make(
+       Notification::send(User::firstWhere('name','Arup'), new OfficePendingApprovalNotification($office));
+
+
+       return OfficeResource::make(
          $office->load(['images','tags','user'])
      );
 
@@ -92,7 +98,7 @@ class OfficeController extends Controller
 
        $office->fill(Arr::except($attributes,['tags']));
 
-       if($office->isDirty(['lat','lng','price_per_day'])){
+       if($requireReview = $office->isDirty(['lat','lng','price_per_day'])){
            $office->fill(['approval_status' => Office::APPROVAL_PENDING]);
        }
 
@@ -105,6 +111,10 @@ class OfficeController extends Controller
             }
 
        });
+
+       if($requireReview){
+           Notification::send(User::firstWhere('name','Arup'), new OfficePendingApprovalNotification($office));
+       }
 
        return OfficeResource::make(
            $office->load(['images','tags','user'])
