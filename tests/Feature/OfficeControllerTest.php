@@ -10,6 +10,8 @@ use App\Models\User;
 use Cassandra\Exception\TruncateException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Response;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 class OfficeControllerTest extends TestCase
@@ -253,11 +255,23 @@ class OfficeControllerTest extends TestCase
             'Authorization' => 'Bearer '.$token->plainTextToken
         ]);
 
-     $response->assertStatus(403);
+     $response->assertStatus(Response::HTTP_FORBIDDEN);
 
     }
 
+    /**
+     * @test
+     */
+    public function itAllowsCreatingIfScopeIsProvided()
+    {
+        $user = User::factory()->create();
 
+        Sanctum::actingAs($user, ['office.create']);
+
+        $response = $this->postJson('/offices');
+
+        $this->assertNotEquals(Response::HTTP_FORBIDDEN, $response->status());
+    }
 
     /**
      * @test
@@ -267,13 +281,15 @@ class OfficeControllerTest extends TestCase
         $user =User::factory()->createQuietly();
 
         $tags = Tag::factory(2)->create();
-        $anotherTag = Tag::factory()->create();
         $office  =   Office::factory()->for($user)->create();
 
        $office->tags()->attach($tags);
 
 
         $this->actingAs($user);
+
+        $anotherTag = Tag::factory()->create();
+
 
         $response = $this->putJson('/api/offices/'.$office->id,  [
                'title' => "Amazing Office",
@@ -306,7 +322,31 @@ class OfficeControllerTest extends TestCase
             'title' => "Amazing Office"
         ]);
 
-         $response->assertStatus(403);
+         $response->assertStatus(Response::HTTP_FORBIDDEN);
+
+
+    }
+
+    /**
+     * @test
+     */
+    public function itMarksTheOfficeAsPendingIfDirty()
+    {
+        $user = User::factory()->create();
+        $office  =   Office::factory()->for($user)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->putJson('/api/offices/'.$office->id,  [
+            'lat' => 23.339553840957688,
+        ]);
+
+        $response->assertOK();
+
+        $this->assertDatabaseHas('offices',[
+            'id' => $office->id,
+            'approval_status' => Office::APPROVAL_PENDING
+        ]);
 
 
     }

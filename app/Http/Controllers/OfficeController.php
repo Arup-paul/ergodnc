@@ -90,10 +90,15 @@ class OfficeController extends Controller
 
        $attributes = (new OfficeValidator())->validate($office, request()->all());
 
+       $office->fill(Arr::except($attributes,['tags']));
+
+       if($office->isDirty(['lat','lng','price_per_day'])){
+           $office->fill(['approval_status' => Office::APPROVAL_PENDING]);
+       }
+
+
        DB::transaction(function () use ($office,$attributes){
-            $office->update(
-               Arr::except($attributes,['tags'])
-           );
+            $office->save();
 
             if(isset($attributes['tags'])){
                 $office->tags()->sync($attributes['tags']);
