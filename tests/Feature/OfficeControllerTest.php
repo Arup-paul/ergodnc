@@ -398,9 +398,9 @@ class OfficeControllerTest extends TestCase
 
         $this->actingAs($user);
 
-        $response = $this->delete('/api/offices/'.$office->id);
+        $response = $this->deleteJson('/api/offices/'.$office->id);
 
-        $response->assertStatus(302);
+        $response->assertUnprocessable();
 
         $this->assertDatabaseHas('offices',[
             'id' => $office->id,
