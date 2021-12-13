@@ -131,9 +131,12 @@ class OfficeController extends Controller
 
        $this->authorize('delete',$office);
 
-       if($office->reservations()->where('status',Reservation::STATUS_ACTIVE)->exists()){
-           throw ValidationException::withMessages(['office' => 'cannot delete the office']);
-       }
+       throw_if(
+           $office->reservations()->where('status',Reservation::STATUS_ACTIVE)->exists(),
+             ValidationException::withMessages(['office' => 'cannot delete the office'])
+
+       );
+
 
 
        $office->delete();
