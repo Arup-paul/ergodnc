@@ -85,6 +85,9 @@ class OfficeController extends Controller
        abort_unless(auth()->user()->tokenCan('office.update'),
            Response::HTTP_FORBIDDEN
        );
+
+       $this->authorize('update',$office);
+
        $attributes = (new OfficeValidator())->validate($office, request()->all());
 
        DB::transaction(function () use ($office,$attributes){

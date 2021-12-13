@@ -267,6 +267,7 @@ class OfficeControllerTest extends TestCase
         $user =User::factory()->createQuietly();
 
         $tags = Tag::factory(2)->create();
+        $anotherTag = Tag::factory()->create();
         $office  =   Office::factory()->for($user)->create();
 
        $office->tags()->attach($tags);
@@ -275,13 +276,37 @@ class OfficeControllerTest extends TestCase
         $this->actingAs($user);
 
         $response = $this->putJson('/api/offices/'.$office->id,  [
-               'title' => "Amazing Office"
+               'title' => "Amazing Office",
+                'tags' => [$tags[0]->id,$anotherTag->id]
          ]);
 
 
 
         $response->assertOk()
+            ->assertJsonCount(2,'data.tags')
+            ->assertJsonPath('data.tags.0.id',$tags[0]->id)
+            ->assertJsonPath('data.tags.1.id',$anotherTag->id)
             ->assertJsonPath('data.title','Amazing Office');
+
+
+    }
+
+    /**
+     * @test
+     */
+    public function itDoesntUpdatesOfficeThatDoesntBelongToUser()
+    {
+        $user = User::factory()->create();
+        $anotherUser = User::factory()->create();
+        $office  =   Office::factory()->for($anotherUser)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->putJson('/api/offices/'.$office->id,  [
+            'title' => "Amazing Office"
+        ]);
+
+         $response->assertStatus(403);
 
 
     }
