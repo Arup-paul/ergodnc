@@ -17,6 +17,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 
 class OfficeController extends Controller
@@ -121,6 +122,23 @@ class OfficeController extends Controller
        );
 
    }
+
+   public function  delete(Office $office)
+   {
+       abort_unless(auth()->user()->tokenCan('office.delete'),
+           Response::HTTP_FORBIDDEN
+       );
+
+       $this->authorize('delete',$office);
+
+       if($office->reservations()->where('status',Reservation::STATUS_ACTIVE)->exists()){
+           throw ValidationException::withMessages(['office' => 'cannot delete the office']);
+       }
+
+
+       $office->delete();
+   }
+
 
 
 }

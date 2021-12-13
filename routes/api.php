@@ -14,3 +14,4 @@ Route::get('/offices',  [OfficeController::class,'index']);
 Route::get('/office/{office}',  [OfficeController::class,'show']);
 Route::post('/offices',  [OfficeController::class,'create'])->middleware(['auth:sanctum','verified']);
 Route::put('/offices/{office}',  [OfficeController::class,'update'])->middleware(['auth:sanctum','verified']);
+Route::delete('/offices/{office}',  [OfficeController::class,'delete'])->middleware(['auth:sanctum','verified']);
