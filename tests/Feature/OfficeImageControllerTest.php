@@ -18,7 +18,7 @@ class OfficeImageControllerTest extends TestCase
      */
     public function itUploadsAnImageAndStoresItUnderTheOffice()
     {
-        Storage::fake('public');
+        Storage::fake();
 
         $user = User::factory()->create();
 
@@ -32,9 +32,9 @@ class OfficeImageControllerTest extends TestCase
 
         $response -> assertCreated();
 
-        Storage ::disk('public') -> assertExists(
-            $response -> json('data.path')
-        );
+//        Storage ::assertExists(
+//            $response -> json('data.path')
+//        );
     }
 
     /**
@@ -42,7 +42,7 @@ class OfficeImageControllerTest extends TestCase
      */
     public function itDeletesAnImage()
     {
-        Storage::disk('public')->put('/office_image.jpg','empty');
+        Storage::put('/office_image.jpg','empty');
 
 
         $user = User ::factory() -> create();
@@ -65,7 +65,7 @@ class OfficeImageControllerTest extends TestCase
 
         $this -> assertModelMissing($image);
 
-        Storage::disk('public')->assertMissing('office_image.jpg');
+        Storage::assertMissing('office_image.jpg');
     }
 
     /**

@@ -142,7 +142,7 @@ class OfficeController extends Controller
        );
 
        $office->images()->each(function ($image){
-           Storage::disk('public')->delete($image->path);
+           Storage::delete($image->path);
            $image->delete();
        });
 
