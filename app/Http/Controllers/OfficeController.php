@@ -77,7 +77,8 @@ class OfficeController extends Controller
          return$office;
      });
 
-       Notification::send(User::firstWhere('name','Arup'), new OfficePendingApprovalNotification($office));
+       Notification::send(User::where('is_admin', true)->get(), new OfficePendingApprovalNotification($office));
+
 
 
        return OfficeResource::make(
@@ -114,7 +115,7 @@ class OfficeController extends Controller
        });
 
        if($requireReview){
-           Notification::send(User::firstWhere('name','Arup'), new OfficePendingApprovalNotification($office));
+           Notification::send(User::where('is_admin', true)->get(), new OfficePendingApprovalNotification($office));
        }
 
        return OfficeResource::make(
