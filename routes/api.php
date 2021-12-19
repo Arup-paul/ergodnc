@@ -20,4 +20,5 @@ Route::delete('/offices/{office}',  [OfficeController::class,'delete'])->middlew
 
 //office photo
 Route::post('/offices/{office}/images',  [OfficeImageController::class,'store'])->middleware(['auth:sanctum','verified']);
+Route::delete('/offices/{office}/images/{image}',  [OfficeImageController::class,'delete'])->middleware(['auth:sanctum','verified']);
 
