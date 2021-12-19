@@ -44,13 +44,33 @@ class OfficeControllerTest extends TestCase
     {
         Office::factory(3)->create();
 
-        Office::factory(3)->create(['hidden' => true]);
-        Office::factory(3)->create(['approval_status' => Office::APPROVAL_PENDING]);
+        Office::factory(3)->hidden()->create();
+        Office::factory(3)->pending()->create();
 
         $response = $this->get('/api/offices');
 
         $response->assertOk();
         $response->assertJsonCount(3,'data');
+
+    }
+
+    /**
+     * @test
+     */
+    public function isListsOfficesIncludingHiddenAndApprovedIfFilteringForTheCurrentLoggedInUser()
+    {
+        $user = User::factory()->create();
+        Office::factory(3)->for($user)->create();
+
+        Office::factory()->hidden()->for($user)->create();
+        Office::factory()->pending()->for($user)->create();
+
+        $this->actingAs($user);
+
+        $response = $this->get('/api/offices?user_id='.$user->id);
+
+        $response->assertOk();
+        $response->assertJsonCount(5,'data');
 
     }
 
