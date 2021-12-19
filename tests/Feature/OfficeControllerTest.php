@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -443,8 +444,14 @@ class OfficeControllerTest extends TestCase
      */
     public function itCanDeleteOffices()
     {
+        Storage::disk('public')->put('/office_image.jpg','empty');
+
         $user = User::factory()->create();
         $office  =   Office::factory()->for($user)->create();
+
+        $image = $office -> images() -> create([
+            'path' => 'office_image.jpg'
+        ]);
 
         $this->actingAs($user);
 
@@ -453,6 +460,10 @@ class OfficeControllerTest extends TestCase
         $response->assertOk();
 
         $this->assertSoftDeleted($office);
+
+        $this -> assertModelMissing($image);
+
+        Storage::disk('public')->assertMissing('office_image.jpg');
 
     }
 
