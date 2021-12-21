@@ -39,4 +39,12 @@ class UserReservationController extends Controller
 
         return ReservationResource::collection($reservations);
     }
+
+
+    public function create(){
+        abort_unless(auth()->user()->tokenCan('reservation.make'),
+            Response::HTTP_FORBIDDEN
+        );
+    }
+
 }
