@@ -51,8 +51,8 @@ class UserReservationController extends Controller
 
         validator(request()->all(),[
             'office_id' => ['required','integer'],
-            'start_date' => ['required','date:Y-m-d'],
-            'end_date' => ['required','date:Y-m-d'],
+            'start_date' => ['required','date:Y-m-d','after:'.now()->addDay()->toDateString()],
+            'end_date' => ['required','date:Y-m-d','after:start_date'],
         ]);
 
         try {
@@ -66,6 +66,12 @@ class UserReservationController extends Controller
         if($office->user_id == auth()->id()){
             throw ValidationException::withMessages([
                 'office_id' => 'you cannot make a reservation on your own office'
+            ]);
+        }
+
+        if($office->reservations()->activeBetween(request('start_date'),request('end_date'))->exits()) {
+            throw ValidationException::withMessages([
+                'office_id' => 'You cannot make a reservation during this time'
             ]);
         }
 
