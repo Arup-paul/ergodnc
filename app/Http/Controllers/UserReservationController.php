@@ -30,7 +30,7 @@ class UserReservationController extends Controller
                         ->orWhereBetween('end_date',[request('from_date'),request('to_date')]);
                 }
             )
-            ->with(['office','office.featuredImage'])
+            ->with('office.featuredImage')
             ->paginate(20);
 
         return ReservationResource::collection($reservations);
