@@ -54,20 +54,25 @@ class UserReservationControllerTest extends TestCase
         $fromDate = "2021-03-03";
         $toDate = "2021-04-04";
 
-        $reservation1 =  Reservation::factory()->for($user)->create([
-            'start_date' => '2021-03-01',
-            'end_date'   => '2021-03-15'
+        $reservations =  Reservation::factory()->for($user)->createMany([
+            [
+                'start_date' => '2021-03-01',
+                'end_date'   => '2021-03-15'
+            ],
+            [
+                'start_date' => '2021-03-25',
+                'end_date'   => '2021-04-15'
+            ],
+            [
+                'start_date' => '2021-03-01',
+                'end_date'   => '2021-03-29'
+            ],
+            [
+                'start_date' => '2021-03-01',
+                'end_date'   => '2021-04-15'
+            ]
         ]);
 
-        $reservation2 = Reservation::factory()->for($user)->create([
-            'start_date' => '2021-03-25',
-            'end_date'   => '2021-04-15'
-        ]);
-
-        $reservation3 = Reservation::factory()->for($user)->create([
-            'start_date' => '2021-03-01',
-            'end_date'   => '2021-03-29'
-        ]);
 
         //within the range but belong to diffrent user
 
@@ -94,9 +99,9 @@ class UserReservationControllerTest extends TestCase
               'to_date'   => $toDate
             ]));
 
-        $response->assertJsonCount(3,'data');
+        $response->assertJsonCount(4,'data');
 
-        $this->assertEquals([$reservation1->id,$reservation2->id,$reservation3->id],collect($response->json('data'))->pluck('id')->toArray());
+        $this->assertEquals($reservations->pluck('id')->toArray(),collect($response->json('data'))->pluck('id')->toArray());
     }
 
     /**
