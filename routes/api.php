@@ -30,4 +30,4 @@ Route::get('/reservations',[UserReservationController::class,'index'])->middlewa
 
 
 //Host reservation
-//Route::get('/host/reservations',[HostReservationController::class,'index']);
+Route::get('/host/reservations',[HostReservationController::class,'index']);
