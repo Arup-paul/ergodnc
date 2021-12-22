@@ -274,6 +274,29 @@ class UserReservationControllerTest extends TestCase
     /**
      * @test
      */
+    public function itMakeReservationOnSameDay()
+    {
+        $user = User::factory()->create();
+
+        $office = Office::factory()->create();
+
+
+        $this->actingAs($user);
+
+        $response = $this->postJson('/api/reservations',[
+            'office_id' => $office->id,
+            'start_date' => now()->toDateString(),
+            'end_date' => now()->addDays(3)->toDateString(),
+        ]);
+
+        $response->assertUnprocessable()
+            ->assertJsonValidationErrors(['start_date' => 'The start date must be a date after today.']);
+    }
+
+
+    /**
+     * @test
+     */
     public function itCannotMakeReservationThatConflicting()
     {
         $user = User::factory()->create();
