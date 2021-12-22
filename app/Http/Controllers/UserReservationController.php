@@ -70,6 +70,16 @@ class UserReservationController extends Controller
                 'office_id' => 'you cannot make a reservation on your own office'
             ]);
         }
+//
+//        if($office->hidden || $office->approval_status  == Office::APPROVAL_PENDING){
+//            throw ValidationException::withMessages([
+//                'office_id' => 'you cannot make a reservation on a hidden office'
+//            ]);
+//        }
+
+        throw_if($office->hidden || $office->approval_status  == Office::APPROVAL_PENDING,
+            ValidationException::withMessages(['office_id' => 'You cannot make a reservation on a hidden office'])
+        );
 
         $reservation = Cache::lock('reservations_office_'.$office->id, 10)->block(3,function () use($data, $office){
             $numberOfDays = Carbon::parse($data['end_date'])->endOfDay()->diffInDays(
