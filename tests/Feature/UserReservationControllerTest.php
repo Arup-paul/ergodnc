@@ -245,7 +245,7 @@ class UserReservationControllerTest extends TestCase
         ]);
 
         $response->assertUnprocessable()
-            ->assertJsonValidationErrors(['start_date' => 'You cannot make a reservation for only 1 day']);
+            ->assertJsonValidationErrors(['end_date' => 'The end date must be a date after start date.']);
     }
 
 
