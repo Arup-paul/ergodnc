@@ -65,17 +65,9 @@ class UserReservationController extends Controller
             ]);
         }
 
-        if($office->user_id == auth()->id()){
-            throw ValidationException::withMessages([
-                'office_id' => 'you cannot make a reservation on your own office'
-            ]);
-        }
-//
-//        if($office->hidden || $office->approval_status  == Office::APPROVAL_PENDING){
-//            throw ValidationException::withMessages([
-//                'office_id' => 'you cannot make a reservation on a hidden office'
-//            ]);
-//        }
+        throw_if($office->user_id == auth()->id(),
+                ValidationException::withMessages(['office_id' => 'you cannot make a reservation on your own office'])
+          );
 
         throw_if($office->hidden || $office->approval_status  == Office::APPROVAL_PENDING,
             ValidationException::withMessages(['office_id' => 'You cannot make a reservation on a hidden office'])
@@ -86,20 +78,13 @@ class UserReservationController extends Controller
                 Carbon::parse($data['start_date'])->startOfDay()
             ) + 1;
 
+            throw_if($numberOfDays < 2,
+                ValidationException::withMessages(['start_date' => 'You cannot make a reservation for only 1 day'])
+            );
 
-
-            if ($numberOfDays < 2) {
-                throw ValidationException::withMessages([
-                    'start_date' => 'You cannot make a reservation for only 1 day'
-                ]);
-            }
-
-
-            if($office->reservations()->activeBetween($data['start_date'],$data['end_date'])->count() > 0) {
-                throw ValidationException::withMessages([
-                    'office_id' => 'You cannot make a reservation during this time'
-                ]);
-            }
+            throw_if($office->reservations()->activeBetween($data['start_date'],$data['end_date'])->count() > 0,
+                ValidationException::withMessages(['office_id' => 'You cannot make a reservation during this time'])
+            );
 
 
             $price = $numberOfDays * $office->price_per_day;
